@@ -8,7 +8,7 @@ CFLAGS = -Wall -Wextra -std=c99 -g
 TARGET = filesys_manager
 
 # Source files
-SRCS = main.c arg_parser.c line_parser.c memory_table.c
+SRCS = main.c arg_parser.c line_parser.c filesystem.c
 
 # Object files (replace .c with .o)
 OBJS = $(SRCS:.c=.o)
