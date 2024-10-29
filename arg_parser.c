@@ -2,11 +2,11 @@
 
 struct Args* parse_arguments(int argc, char** argv) {
     if (argc != 3) {
-        printf("Unable to start: Usage: filesys_manager [FILESYS_NAME] [SCRIPT]\n");
+        printf("Unable to start: Usage: filesys_manager [FILESYS_FILE_PATH] [SCRIPT]\n");
         exit(1);
     }
 
-    char* filesys_name = argv[1];
+    char* filesys_file_path = argv[1];
     FILE *script = fopen(argv[2], "r");
 
     if (!script) {
@@ -16,7 +16,7 @@ struct Args* parse_arguments(int argc, char** argv) {
 
     struct Args* args;
     args = malloc(sizeof(struct Args));
-    args->filesys_name = filesys_name;
+    args->filesys_file_path = filesys_file_path;
     args->file = script;
 
     return args;

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 struct Args {
-    char* filesys_name;
+    char* filesys_file_path;
     FILE* file;
 };
 

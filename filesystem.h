@@ -9,32 +9,36 @@
 #define MAX_BLOCKS_PER_FILE 1954
 #define BLOCK_SIZE          512
 
-struct Block {
-    bool free;
-    int start_index;
-    int end_index;
+struct BlockNode {
+    char buffer[BLOCK_SIZE];
+    int size;
+    int system_index;
+    int file_index;
+    struct BlockNode* system_next;
+    struct BlockNode* file_next;
 };
 
-//TODO: File, File linked list or hashmap, implementations... 
+struct File {
+    char* name;
+    int size; 
+    struct BlockNode* first_block;
+};
 
 struct Filesystem {
-    char* buffer;
-    size_t number_of_files;
-    struct Block* blocks;
+    int number_of_files;
+    struct File files[MAX_FILE_NUMBER];
+    struct BlockNode* first_block;
 };
 
+// File save/restart
+struct Filesystem* read_filesystem(FILE*);
+void write_filesystem(struct Filesystem*, char*);
+// Block Management
+void add_block(struct Filesystem*, struct BlockNode*, int)
+// API Filesystem Functions
 void init_filesystem(struct Filesystem*, char*);
-void save_filesystem(struct Filesystem*, char*);
-void set_block_data(char*, char*, int , int, int);
 void create_file(struct Filesystem*, char*, int);
 void write_file(struct Filesystem*, char*, int, char*);
 void read_file(struct Filesystem*, char*, int, int);
 void delete_file(struct Filesystem*, char*);
 void list_files(struct Filesystem*);
-// void add_block(struct MemoryTable*, char, int, int, int);
-// void alloc_variable_first(struct MemoryTable*, char, int);
-// void alloc_variable_worst(struct MemoryTable*, char, int);
-// void alloc_variable(struct MemoryTable*, char, int, int);
-// void realloc_variable(struct MemoryTable*, char, int, int);
-// void free_variable(struct MemoryTable*, char);
-// void print_table(struct MemoryTable*);

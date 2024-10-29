@@ -1,24 +1,55 @@
 #include "filesystem.h"
 
-// // Constants of algorithms
-// #define BEST  0
-// #define FIRST 1
-// #define WORST 2
+struct Filesystem* read_filesystem(FILE* file) {
+    //TODO: Implement;
+    return NULL;
+}
 
-// void init_table(struct MemoryTable* table, int capacity) {
-//     table->blocks = malloc(capacity * sizeof(struct Block));
-//     table->buffer = malloc(capacity);
-//     table->size = 1;
-//     table->capacity = capacity;
-//     struct Block initial_block = {' ', true, 0, capacity}; 
-//     table->blocks[0] = initial_block;
-// }
+void write_filesystem(char* filename) {
+    //TODO: Implement
+}
+
+void init_filesystem(struct Filesystem* filesys, char* filesys_name) {
+    FILE *filesys_file = fopen(filesys_name, "r");
+    if (filesys_file) {
+        filesys = read_filesystem(filesys_file);
+    } else {
+        filesys->number_of_files = 0;
+        filesys->files = malloc(MAX_FILE_NUMBER * sizeof(struct File));
+    }
+}
 
 // void set_data(char var_name, char* buffer, int start_index, int end_index) {
 //     for (int i = start_index; i < end_index; i++) {
 //         buffer[i] = var_name;
 //     }
 // }
+
+void create_file(struct Filesystem* filesys, char* filename, int size) {
+    if (filesys->number_of_files == MAX_FILE_NUMBER) {
+        printf("Error: Maximum number of files reached. Exiting the app...");
+        exit(1);
+    }
+    if (size == 0) {
+        printf("Error: File cannot be of length 0. Exiting the app...");
+        exit(1);
+    }
+    if (size > MAX_FILE_SIZE) {
+        printf("Error: File cannot be of length greater than %d. Exiting the app...", MAX_FILE_SIZE);
+        exit(1);
+    }
+
+    filesys[filesys->number_of_files].name = filename;
+    filesys[filesys->number_of_files].size = size;
+    
+    struct BlockNode* past_node = NULL;
+    // for (i < ceil(size/BLOCK_SIZE)):
+    for (int i=0; i < ((size+(BLOCK_SIZE-1))/BLOCK_SIZE); i++) {
+        int block_size = i+1 == ((size+(BLOCK_SIZE-1))/BLOCK_SIZE) ? BLOCK_SIZE : size%512;
+        add_block(filesys, past_node, block_size);
+    }
+    filesys->number_of_files++;
+}
 
 // void add_block(struct MemoryTable* table, char var_name, int start_index, int end_index, int free_block_index) {
 //     // New block

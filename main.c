@@ -6,7 +6,7 @@ int main(int argc, char** argv) {
 
     // Filesystem to be managed
     struct Filesystem *filesys; 
-    //TODO: Read from a file the filesys info if exists
+    init_filesystem(filesys, args->filesys_file_path);
 
     char line[256];
     while (fgets(line, sizeof(line), args->file) != NULL) {
@@ -29,7 +29,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    //TODO: Write in a file the filesys info
-
+    void write_filesystem(filesys, filesys->filesys_file_path);
     return 0;
 }
