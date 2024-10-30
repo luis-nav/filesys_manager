@@ -12,8 +12,6 @@
 struct BlockNode {
     char buffer[BLOCK_SIZE];
     int size;
-    int system_index;
-    int file_index;
     struct BlockNode* system_next;
     struct BlockNode* file_next;
 };
