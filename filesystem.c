@@ -1,5 +1,7 @@
 #include "filesystem.h"
 
+// INIT, READ AND WRITE
+
 struct Filesystem* read_filesystem(FILE* file) {
     //TODO: Implement;
     return NULL;
@@ -15,14 +17,46 @@ void init_filesystem(struct Filesystem* filesys, char* filesys_name) {
         filesys = read_filesystem(filesys_file);
     } else {
         filesys->number_of_files = 0;
+        for (int i=0; i < ( MAX_BLOCKS_PER_FILE * MAX_FILE_NUMBER ); i++) {
+            filesys->blocks[i].free = true;
+        }
     }
 }
 
-// void set_data(char var_name, char* buffer, int start_index, int end_index) {
-//     for (int i = start_index; i < end_index; i++) {
-//         buffer[i] = var_name;
-//     }
-// }
+// LINKED LIST FOR BLOCKS INDICES
+
+struct Index_Node* create_node(int index) {
+    struct Index_Node* new_node = malloc(sizeof(struct Index_Node));
+    new_node->index = index;
+    new_node->next = NULL;
+    return new_node;
+}
+
+void append(struct Index_Node* start, int index) {
+    struct Index_Node* new_node = create_node(index);
+
+    if (start == NULL) {
+        start = new_node;
+        return;
+    }
+
+    struct Index_Node* last = start;
+    while (last->next != NULL) {
+        last = last->next;
+    }
+
+    last->next = new_node;
+}
+
+void free_list(struct Index_Node* start) {
+    struct Index_Node* temp;
+
+    while (start != NULL) {
+        temp = start;
+        start = start->next;
+        free(temp);
+    }
+}
 
 void create_file(struct Filesystem* filesys, char* filename, int size) {
     if (filesys->number_of_files == MAX_FILE_NUMBER) {
@@ -39,13 +73,15 @@ void create_file(struct Filesystem* filesys, char* filename, int size) {
     }
 
     filesys->files[filesys->number_of_files].name = filename;
-    filesys->files[filesys->number_of_files].size = size;
+    filesys->files[filesys->number_of_files].file_size = size;
+    filesys->files[filesys->number_of_files].block_size = ((size+(BLOCK_SIZE-1))/BLOCK_SIZE);
     
-    struct BlockNode* past_node = NULL;
-    // for (i < ceil(size/BLOCK_SIZE)):
-    for (int i=0; i < ((size+(BLOCK_SIZE-1))/BLOCK_SIZE); i++) {
-        int block_size = i+1 == ((size+(BLOCK_SIZE-1))/BLOCK_SIZE) ? BLOCK_SIZE : size%512;
-        add_block(filesys, past_node, block_size);
+    int assigned = 0;
+    for (int i=0; (i < (MAX_BLOCKS_PER_FILE*MAX_FILE_NUMBER) && assigned < filesys->files[filesys->number_of_files].block_size); i++) {
+        if (filesys->blocks[i].free) {
+            append(filesys->files[filesys->number_of_files].first_block_index, i);
+            assigned++;
+        }
     }
     filesys->number_of_files++;
 }

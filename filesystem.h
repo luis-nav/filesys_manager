@@ -9,28 +9,37 @@
 #define MAX_BLOCKS_PER_FILE 1954
 #define BLOCK_SIZE          512
 
-struct BlockNode {
+struct Index_Node {
+    int index;
+    struct Index_Node* next;
+};
+
+struct Block {
     char buffer[BLOCK_SIZE];
+    bool free;
     int size;
-    struct BlockNode* system_next;
-    struct BlockNode* file_next;
 };
 
 struct File {
     char* name;
-    int size; 
-    struct BlockNode* first_block;
+    int file_size;
+    int block_size; 
+    struct Index_Node* first_block_index;
 };
 
 struct Filesystem {
     int number_of_files;
     struct File files[MAX_FILE_NUMBER];
-    struct BlockNode* first_block;
+    struct Block blocks[MAX_BLOCKS_PER_FILE*MAX_FILE_NUMBER];
 };
 
 // File save/restart
 struct Filesystem* read_filesystem(FILE*);
 void write_filesystem(struct Filesystem*, char*);
+// Int linked list functions
+struct Index_Node* create_node(int);
+void append(struct Index_Node*, int);
+void free_list(struct Index_Node*);
 // Block Management
 void add_block(struct Filesystem*, struct BlockNode*, int);
 // API Filesystem Functions
