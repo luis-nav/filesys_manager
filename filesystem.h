@@ -41,7 +41,7 @@ struct Index_Node* create_node(int);
 void append(struct Index_Node*, int);
 void free_list(struct Index_Node*);
 // Block Management
-void add_block(struct Filesystem*, struct BlockNode*, int);
+// void add_block(struct Filesystem*, struct BlockNode*, int);
 // API Filesystem Functions
 void init_filesystem(struct Filesystem*, char*);
 void create_file(struct Filesystem*, char*, int);
