@@ -5,7 +5,7 @@ struct Filesystem* read_filesystem(FILE* file) {
     return NULL;
 }
 
-void write_filesystem(char* filename) {
+void write_filesystem(struct Filesystem* filesys, char* filename) {
     //TODO: Implement
 }
 
@@ -15,7 +15,6 @@ void init_filesystem(struct Filesystem* filesys, char* filesys_name) {
         filesys = read_filesystem(filesys_file);
     } else {
         filesys->number_of_files = 0;
-        filesys->files = malloc(MAX_FILE_NUMBER * sizeof(struct File));
     }
 }
 
@@ -39,8 +38,8 @@ void create_file(struct Filesystem* filesys, char* filename, int size) {
         exit(1);
     }
 
-    filesys[filesys->number_of_files].name = filename;
-    filesys[filesys->number_of_files].size = size;
+    filesys->files[filesys->number_of_files].name = filename;
+    filesys->files[filesys->number_of_files].size = size;
     
     struct BlockNode* past_node = NULL;
     // for (i < ceil(size/BLOCK_SIZE)):

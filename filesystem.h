@@ -32,7 +32,7 @@ struct Filesystem {
 struct Filesystem* read_filesystem(FILE*);
 void write_filesystem(struct Filesystem*, char*);
 // Block Management
-void add_block(struct Filesystem*, struct BlockNode*, int)
+void add_block(struct Filesystem*, struct BlockNode*, int);
 // API Filesystem Functions
 void init_filesystem(struct Filesystem*, char*);
 void create_file(struct Filesystem*, char*, int);

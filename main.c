@@ -29,6 +29,6 @@ int main(int argc, char** argv) {
         }
     }
 
-    void write_filesystem(filesys, filesys->filesys_file_path);
+    write_filesystem(filesys, args->filesys_file_path);
     return 0;
 }
