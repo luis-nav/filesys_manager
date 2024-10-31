@@ -11,38 +11,34 @@ void read_filesystem(struct Filesystem* filesys, FILE* filesystem_file) {
             filesys->files[i].first_block_index = NULL;
     }
     // Set number of files
-    fscanf(filesystem_file, "f%d", &(filesys->number_of_files));
-    printf("Num files: %05d\n", filesys->number_of_files);
+    fscanf(filesystem_file, "%d", &(filesys->number_of_files));
 
     //For each file
     for (int i=0; i < filesys->number_of_files; i++) {
         // Read file metadata
         int filename_size = 0;
-        fscanf(filesystem_file, "f%08d%03d", &filesys->files[i].file_size, filename_size);
-        printf("File metadata: size: %08d name_size: %03d", filesys->number_of_files, filename_size);
+        fscanf(filesystem_file, "\nf %d %d ", &filesys->files[i].file_size, &filename_size);
         filesys->files[i].name[FILENAME_SIZE-1] = '\0'; 
-        fgets(filesys->files[i].name, 255, filesystem_file);
-        printf("File metadata: name: %s", filesys->files[i].name);
+        // fscanf(filesystem_file, "%s\n", filesys->files[i].name);
+        fgets(filesys->files[i].name, filename_size+1, filesystem_file);
 
         int read_result = 2;
         while(read_result == 2) {
             // Read block metadata
-            int block_index, block_size;
+            int block_index, block_size = 0;
             char buffer[BLOCK_SIZE+1]; // +1 for \n
-            read_result = fscanf(filesystem_file, "b%d%d", &block_index, &block_size);
+            read_result = fscanf(filesystem_file, "\nb %d %d ", &block_index, &block_size);
 
             // End if the isnt more blocks
             if (read_result != 2) break;
 
-            // Read block info
-            fscanf(filesystem_file, "%s", buffer);
 
             // Set block metadata
             filesys->blocks[block_index].size = block_size;
             filesys->blocks[block_index].free = false;
 
-            // Set block info via strncopy
-            strncpy(filesys->blocks[block_index].buffer, buffer, block_size);
+            // Read block info
+            fgets(filesys->blocks[block_index].buffer, block_size+1, filesystem_file);
 
             // Append new index to index node list
             append(&filesys->files[i], block_index);
@@ -63,13 +59,13 @@ void write_filesystem(struct Filesystem* filesys, char* filename) {
     fprintf(filesystem_file, "%02d\n", filesys->number_of_files);
     // Write Files Metadata
     for (int i = 0; i < filesys->number_of_files; i++) {
-        fprintf(filesystem_file, "f%08d%03d%s\n", filesys->files[i].file_size, strlen(filesys->files[i].name), filesys->files[i].name);
+        fprintf(filesystem_file, "f %08d %03d %s\n", filesys->files[i].file_size, strlen(filesys->files[i].name),filesys->files[i].name);
         struct Index_Node* tmp = filesys->files[i].first_block_index;
         while (tmp != NULL) {
             // Block index
-            fprintf(filesystem_file, "b%05d", tmp->index);
+            fprintf(filesystem_file, "b %05d", tmp->index);
             // Block size
-            fprintf(filesystem_file, "%05d", filesys->blocks[tmp->index].size);
+            fprintf(filesystem_file, " %05d ", filesys->blocks[tmp->index].size);
             // Block data
             fprintf(filesystem_file, "%s", filesys->blocks[tmp->index].buffer);
             // End of block

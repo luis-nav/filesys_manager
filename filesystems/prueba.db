@@ -1,4 +1,10 @@
-01
-f00001000012archivo1.txt
-b0000000012Hola, mundoo
-b0000100000
+03
+f 00001000 012 archivo1.txt
+b 00000 00012 Hola, mundoo
+b 00001 00000 
+f 00001000 012 archivo2.txt
+b 00002 00012 Hola, mundoo
+b 00003 00000 
+f 00001000 012 archivo3.txt
+b 00004 00012 Hola, mundoo
+b 00005 00000 
