@@ -11,12 +11,18 @@ void read_filesystem(struct Filesystem* filesys, FILE* filesystem_file) {
             filesys->files[i].first_block_index = NULL;
     }
     // Set number of files
-    fscanf(filesystem_file, "f%d", &filesys->number_of_files);
+    fscanf(filesystem_file, "f%d", &(filesys->number_of_files));
+    printf("Num files: %05d\n", filesys->number_of_files);
 
     //For each file
     for (int i=0; i < filesys->number_of_files; i++) {
-        // Read file size
-        fscanf(filesystem_file, "f%d", &filesys->files[i].file_size);
+        // Read file metadata
+        int filename_size = 0;
+        fscanf(filesystem_file, "f%08d%03d", &filesys->files[i].file_size, filename_size);
+        printf("File metadata: size: %08d name_size: %03d", filesys->number_of_files, filename_size);
+        filesys->files[i].name[FILENAME_SIZE-1] = '\0'; 
+        fgets(filesys->files[i].name, 255, filesystem_file);
+        printf("File metadata: name: %s", filesys->files[i].name);
 
         int read_result = 2;
         while(read_result == 2) {
@@ -54,10 +60,10 @@ void write_filesystem(struct Filesystem* filesys, char* filename) {
     FILE* filesystem_file = fopen(filename, "w");
 
     // Write Filesystem Info
-    fprintf(filesystem_file, "%05d\n", filesys->number_of_files);
+    fprintf(filesystem_file, "%02d\n", filesys->number_of_files);
     // Write Files Metadata
     for (int i = 0; i < filesys->number_of_files; i++) {
-        fprintf(filesystem_file, "f%05d\n", filesys->files[i].file_size);
+        fprintf(filesystem_file, "f%08d%03d%s\n", filesys->files[i].file_size, strlen(filesys->files[i].name), filesys->files[i].name);
         struct Index_Node* tmp = filesys->files[i].first_block_index;
         while (tmp != NULL) {
             // Block index
@@ -255,7 +261,7 @@ void read_file(struct Filesystem* filesys, char* filename, int offset, int size)
         current_block = current_block->next; // Pasa al siguiente bloque
     }
 
-    printf("Output: %s\n", buffer); // Imprime el contenido leído desde el archivo
+    printf("Output: %s\n\n", buffer); // Imprime el contenido leído desde el archivo
 }
 
 // Elimina un archivo del sistema de archivos y libera sus bloques
@@ -294,10 +300,11 @@ void delete_file(struct Filesystem* filesys, char* filename) {
 void list_files(struct Filesystem* filesys) {
     int num = filesys->number_of_files; // obtiene la cantidad de archivos
     if (num == 0) { // caso 1: no hay archivos
-        printf("(No Files)\n"); // avisa que no hay archivos
+        printf("(No Files)\n\n"); // avisa que no hay archivos
         return;
     }
     for (int i = 0; i < num; i++) { // caso 2: hay i archivos
         printf("%s - %d bytes\n", filesys->files[i].name, filesys->files[i].file_size); // imprime el nombre y el tamaño de cada archivo
     }
+    printf("\n");
 }
