@@ -9,6 +9,7 @@
 #define MAX_FILE_NUMBER     50
 #define MAX_BLOCKS_PER_FILE 1954
 #define BLOCK_SIZE          512
+#define FILENAME_SIZE       256
 
 struct Index_Node {
     int index;
@@ -22,7 +23,7 @@ struct Block {
 };
 
 struct File {
-    char* name;
+    char name[256];
     int file_size;
     int block_size; 
     struct Index_Node* first_block_index;
@@ -35,11 +36,11 @@ struct Filesystem {
 };
 
 // File save/restart
-struct Filesystem* read_filesystem(FILE*);
+void read_filesystem(struct Filesystem*, FILE*);
 void write_filesystem(struct Filesystem*, char*);
 // Int linked list functions
 struct Index_Node* create_node(int);
-void append(struct Index_Node*, int);
+void append(struct File*, int);
 void free_list(struct Index_Node*);
 // API Filesystem Functions
 void init_filesystem(struct Filesystem*, char*);

@@ -39,7 +39,7 @@ struct Command* parse_line(char* line) {
     if (cmd->command < 4) {
         token = strtok(NULL, delimiters);
         if (token != NULL) {
-            cmd->filename = token[0];
+            cmd->filename = token;
         } else {
             printf("Expected filename after CREATE, WRITE, READ OR DELETE\nLine: %s", line);
             exit(1);
@@ -58,7 +58,7 @@ struct Command* parse_line(char* line) {
 
         // Get WRITE data
         if (cmd->command == WRITE) {
-            token = strtok(NULL, delimiters);
+            token = strtok(NULL, "\n");
             if (token != NULL) {
                 cmd->data = token;
             } else {

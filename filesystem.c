@@ -2,12 +2,13 @@
 
 // INIT, READ AND WRITE
 
-struct Filesystem* read_filesystem(FILE* filesystem_file) {
-    struct Filesystem* filesys = malloc(sizeof(struct Filesystem));
-
+void read_filesystem(struct Filesystem* filesys, FILE* filesystem_file) {
     filesys->number_of_files = 0;
     for (int i=0; i < ( MAX_BLOCKS_PER_FILE * MAX_FILE_NUMBER ); i++) {
             filesys->blocks[i].free = true;
+    }
+    for (int i=0; i < MAX_FILE_NUMBER; i++) {
+            filesys->files[i].first_block_index = NULL;
     }
     // Set number of files
     fscanf(filesystem_file, "f%d", &filesys->number_of_files);
@@ -38,7 +39,7 @@ struct Filesystem* read_filesystem(FILE* filesystem_file) {
             strncpy(filesys->blocks[block_index].buffer, buffer, block_size);
 
             // Append new index to index node list
-            append(filesys->files[i].first_block_index, block_index);
+            append(&filesys->files[i], block_index);
         }
     }
 
@@ -46,8 +47,6 @@ struct Filesystem* read_filesystem(FILE* filesystem_file) {
         printf("Error closing file...\nCould not read file");
         exit(2);
     }
-    
-    return filesys;
 }
 
 // Guarda el estado actual del sistema de archivos en el archivo indicado
@@ -82,22 +81,22 @@ void write_filesystem(struct Filesystem* filesys, char* filename) {
 // LINKED LIST FOR BLOCKS INDICES
 
 struct Index_Node* create_node(int index) {
-    struct Index_Node* new_node = malloc(sizeof(struct Index_Node)); // reserva memoria para el nuevo nodo
+    struct Index_Node* new_node = (struct Index_Node*)malloc(sizeof(struct Index_Node)); // reserva memoria para el nuevo nodo
     new_node->index = index; // asigna el índice al nuevo nodo
     new_node->next = NULL; // inicializa el siguiente nodo como NULL
     return new_node;
 }
 
 // Agrega un nodo al final de la lista de índices de bloques
-void append(struct Index_Node* start, int index) {
+void append(struct File* file, int index) {
     struct Index_Node* new_node = create_node(index); // crea un nuevo nodo con el índice proporcionado
 
-    if (start == NULL) { // si la lista está vacía, asigna el nodo como el inicio
-        start = new_node;
+    if (file->first_block_index == NULL) { // si la lista está vacía, asigna el nodo como el inicio
+        file->first_block_index = new_node;
         return;
     }
 
-    struct Index_Node* last = start; // encuentra el último nodo en la lista
+    struct Index_Node* last = file->first_block_index; // encuentra el último nodo en la lista
     while (last->next != NULL) {
         last = last->next;
     }
@@ -120,11 +119,15 @@ void free_list(struct Index_Node* start) {
 void init_filesystem(struct Filesystem* filesys, char* filesys_name) {
     FILE *filesys_file = fopen(filesys_name, "r"); // intenta abrir el archivo del sistema de archivos en modo lectura
     if (filesys_file) { // si existe, lee el sistema de archivos desde el archivo
-        filesys = read_filesystem(filesys_file);
+        read_filesystem(filesys, filesys_file);
     } else { // si no existe, inicializa un nuevo sistema de archivos
+        // filesys = malloc(sizeof(struct Filesystem));
         filesys->number_of_files = 0;
         for (int i=0; i < ( MAX_BLOCKS_PER_FILE * MAX_FILE_NUMBER ); i++) { // marca todos los bloques como libres
             filesys->blocks[i].free = true;
+        }
+        for (int i=0; i < MAX_FILE_NUMBER; i++) {
+            filesys->files[i].first_block_index = NULL;
         }
     }
 }
@@ -146,16 +149,18 @@ void create_file(struct Filesystem* filesys, char* filename, int size) {
     }
 
     // configura el nuevo archivo con el nombre, tamaño y bloques necesarios
-    filesys->files[filesys->number_of_files].name = filename;
+    strcpy(filesys->files[filesys->number_of_files].name, filename);
     filesys->files[filesys->number_of_files].file_size = size;
     filesys->files[filesys->number_of_files].block_size = ((size+(BLOCK_SIZE-1))/BLOCK_SIZE);
     
     int assigned = 0; // cantidad de bloques asignados al archivo
-    for (int i=0; (i < (MAX_BLOCKS_PER_FILE*MAX_FILE_NUMBER) && assigned < filesys->files[filesys->number_of_files].block_size); i++) {
-        if (filesys->blocks[i].free) { // si el bloque está libre, se asigna al archivo
-            append(filesys->files[filesys->number_of_files].first_block_index, i);
+    int index = 0;
+    while (assigned < filesys->files[filesys->number_of_files].block_size) {
+        if (filesys->blocks[index].free) { // si el bloque está libre, se asigna al archivo
+            append(&filesys->files[filesys->number_of_files], index);
             assigned++;
         }
+        index++;
     }
     filesys->number_of_files++; // incrementa el contador de archivos
 }
@@ -171,33 +176,35 @@ void write_file(struct Filesystem* filesys, char* filename, int offset, char* da
     }
 
     if (!file) { // valida que el archivo existe
-        printf("Error: Archivo no encontrado. Exiting the app...");
+        printf("Error: File not found. Exiting the app...");
         exit(1);
     }
 
     // verifica que el tamaño de los datos no exceda el tamaño del archivo
-    if (offset + strlen(data) > file->file_size) {
-        printf("Error: Excede el tamaño del archivo. Exiting the app...");
+    int data_length = strlen(data); // variable que indica largo de datos
+    if (offset + data_length > file->file_size) {
+        printf("Error: Data exceeds file limits. Exiting the app...");
         exit(1);
     }
 
     // busca el bloque donde comenzará la escritura y ajusta el offset
-    struct Index_Node* current_block = file->first_block_index;
-    int block_index = offset / BLOCK_SIZE;
-    for (int i = 0; i < block_index; i++) {
-        current_block = current_block->next;
+    struct Index_Node* block_index_node = file->first_block_index;
+    int block_index_offset = offset / BLOCK_SIZE;
+    for (int i=0; i<block_index_offset; i++) {
+        block_index_node = block_index_node->next;
     }
 
-    int block_offset = offset % BLOCK_SIZE;
+    int block_offset = offset % BLOCK_SIZE; // Offset a nivel interno del bloque
     int data_written = 0; // variable que indica cuántos datos se han escrito
-    while (data_written < strlen(data)) { // continúa hasta que todos los datos estén escritos
-        int space_in_block = BLOCK_SIZE - block_offset;
-        int data_to_write = strlen(data) - data_written;
-        int write_size = (data_to_write < space_in_block) ? data_to_write : space_in_block;
-        strncpy(filesys->blocks[current_block->index].buffer + block_offset, data + data_written, write_size);
-        data_written += write_size;
-        block_offset = 0;
-        current_block = current_block->next;
+    while (data_written < data_length) { // continúa hasta que todos los datos estén escritos        
+        int data_to_write = data_length - data_written;
+        int write_size = (data_to_write < BLOCK_SIZE) ? data_to_write : BLOCK_SIZE;
+        filesys->blocks[block_index_node->index].free = false;
+        filesys->blocks[block_index_node->index].size = write_size;
+        strncpy(&(filesys->blocks[block_index_node->index].buffer[block_offset]), &(data[0+data_written]), write_size);
+        if (block_offset != 0)  block_offset = 0; // Si ya el offset se aplico, se setea en 0
+        block_index_node = block_index_node->next; // Setear siguiente bloque
+        data_written += write_size; // Agregar cuantos datos se han escrito
     }
 }
 
@@ -212,13 +219,13 @@ void read_file(struct Filesystem* filesys, char* filename, int offset, int size)
     }
 
     if (!file) { // caso 2: si no se encuentra el archivo se manda un mensaje de error
-        printf("Error: Archivo no encontrado. Exiting the app...");
+        printf("Error: File not found. Exiting the app...");
         exit(1);
     }
 
     // validación de offset
     if (offset + size > file->file_size) { // manda mensaje de error en caso de que se exceda el tamaño del archivo
-        printf("Error: Lectura excede el tamaño del archivo. Exiting the app...");
+        printf("Error: Read exceeds size of file. Exiting the app...");
         exit(1);
     }
 
@@ -248,7 +255,7 @@ void read_file(struct Filesystem* filesys, char* filename, int offset, int size)
         current_block = current_block->next; // Pasa al siguiente bloque
     }
 
-    printf("Salida: %s\n", buffer); // Imprime el contenido leído desde el archivo
+    printf("Output: %s\n", buffer); // Imprime el contenido leído desde el archivo
 }
 
 // Elimina un archivo del sistema de archivos y libera sus bloques
@@ -264,7 +271,7 @@ void delete_file(struct Filesystem* filesys, char* filename) {
     }
 
     if (file_index == -1) { // caso 2: si no se encuentra el archivo se manda un mensaje de error
-        printf("Error: Archivo no encontrado. Exiting the app...");
+        printf("Error: File not found. Exiting the app...");
         exit(1);
     }
 
@@ -287,7 +294,7 @@ void delete_file(struct Filesystem* filesys, char* filename) {
 void list_files(struct Filesystem* filesys) {
     int num = filesys->number_of_files; // obtiene la cantidad de archivos
     if (num == 0) { // caso 1: no hay archivos
-        printf("(No hay archivos)\n"); // avisa que no hay archivos
+        printf("(No Files)\n"); // avisa que no hay archivos
         return;
     }
     for (int i = 0; i < num; i++) { // caso 2: hay i archivos

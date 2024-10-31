@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
     args = parse_arguments(argc, argv);
 
     // Filesystem to be managed
-    struct Filesystem *filesys; 
+    struct Filesystem *filesys = (struct Filesystem*)malloc(sizeof(struct Filesystem)); 
     init_filesystem(filesys, args->filesys_file_path);
 
     char line[256];
@@ -13,15 +13,15 @@ int main(int argc, char** argv) {
         struct Command* cmd = parse_line(line);
         if (cmd != NULL) {
             if (cmd->command == CREATE) {
-                create_file(&filesys, cmd->filename, cmd->size);
+                create_file(filesys, cmd->filename, cmd->size);
             } else if (cmd->command == WRITE) {
-                write_file(&filesys, cmd->filename, cmd->offset, cmd->data);
+                write_file(filesys, cmd->filename, cmd->offset, cmd->data);
             } else if (cmd->command == READ) {
-                read_file(&filesys, cmd->filename, cmd->offset, cmd->size);
+                read_file(filesys, cmd->filename, cmd->offset, cmd->size);
             } else if (cmd->command == DELETE) {
-                delete_file(&filesys, cmd->filename);
+                delete_file(filesys, cmd->filename);
             } else if (cmd->command == LIST) {
-                list_files(&filesys);
+                list_files(filesys);
             } else {
                 printf("Could not read command... Exiting app...");
                 exit(1);
