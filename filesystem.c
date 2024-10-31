@@ -2,13 +2,80 @@
 
 // INIT, READ AND WRITE
 
-struct Filesystem* read_filesystem(FILE* file) {
-    //TODO: Implement;
-    return NULL;
+struct Filesystem* read_filesystem(FILE* filesystem_file) {
+    struct Filesystem* filesys = malloc(sizeof(struct Filesystem));
+
+    filesys->number_of_files = 0;
+    for (int i=0; i < ( MAX_BLOCKS_PER_FILE * MAX_FILE_NUMBER ); i++) {
+            filesys->blocks[i].free = true;
+    }
+    // Set number of files
+    fscanf(filesystem_file, "f%d", &filesys->number_of_files);
+
+    //For each file
+    for (int i=0; i < filesys->number_of_files; i++) {
+        // Read file size
+        fscanf(filesystem_file, "f%d", &filesys->files[i].file_size);
+
+        int read_result = 2;
+        while(read_result == 2) {
+            // Read block metadata
+            int block_index, block_size;
+            char buffer[BLOCK_SIZE+1]; // +1 for \n
+            read_result = fscanf(filesystem_file, "b%d%d", &block_index, &block_size);
+
+            // End if the isnt more blocks
+            if (read_result != 2) break;
+
+            // Read block info
+            fscanf(filesystem_file, "%s", buffer);
+
+            // Set block metadata
+            filesys->blocks[block_index].size = block_size;
+            filesys->blocks[block_index].free = false;
+
+            // Set block info via strncopy
+            strncpy(filesys->blocks[block_index].buffer, buffer, block_size);
+
+            // Append new index to index node list
+            append(filesys->files[i].first_block_index, block_index);
+        }
+    }
+
+    if (fclose(filesystem_file) != 0) {
+        printf("Error closing file...\nCould not read file");
+        exit(2);
+    }
+    
+    return filesys;
 }
 
 void write_filesystem(struct Filesystem* filesys, char* filename) {
-    //TODO: Implement
+    FILE* filesystem_file = fopen(filename, "w");
+
+    // Write Filesystem Info
+    fprintf(filesystem_file, "%05d\n", filesys->number_of_files);
+    // Write Files Metadata
+    for (int i = 0; i < filesys->number_of_files; i++) {
+        fprintf(filesystem_file, "f%05d\n", filesys->files[i].file_size);
+        struct Index_Node* tmp = filesys->files[i].first_block_index;
+        while (tmp != NULL) {
+            // Block index
+            fprintf(filesystem_file, "b%05d", tmp->index);
+            // Block size
+            fprintf(filesystem_file, "%05d", filesys->blocks[tmp->index].size);
+            // Block data
+            fprintf(filesystem_file, "%s", filesys->blocks[tmp->index].buffer);
+            // End of block
+            fprintf(filesystem_file, "\n");
+            tmp = tmp->next;
+        }
+    }
+    if (fclose(filesystem_file) != 0) {
+        printf("Error closing file...\nCould not save %s", filename);
+        exit(2);
+    }
+
 }
 
 void init_filesystem(struct Filesystem* filesys, char* filesys_name) {

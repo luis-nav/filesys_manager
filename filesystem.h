@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 #include <limits.h>
 
 #define SYSTEM_SIZE         50022400
@@ -40,8 +41,6 @@ void write_filesystem(struct Filesystem*, char*);
 struct Index_Node* create_node(int);
 void append(struct Index_Node*, int);
 void free_list(struct Index_Node*);
-// Block Management
-void add_block(struct Filesystem*, struct BlockNode*, int);
 // API Filesystem Functions
 void init_filesystem(struct Filesystem*, char*);
 void create_file(struct Filesystem*, char*, int);
