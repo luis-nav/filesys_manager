@@ -1,0 +1,2 @@
+CREATE archivo3.txt 1000
+READ archivo2.txt 0 10

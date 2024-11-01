@@ -2,6 +2,9 @@ LIST
 CREATE archivo3.txt 1000
 WRITE archivo3.txt 0 Hola, mundoo
 READ archivo3.txt 0 11
+CREATE archivo2.txt 912
+WRITE archivo2.txt 880 Hola esto es una prueba
+READ archivo2.txt 880 23
 LIST
-#DELETE archivo2.txt
+DELETE archivo2.txt
 #LIST

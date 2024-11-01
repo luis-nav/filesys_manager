@@ -1,0 +1,5 @@
+CREATE archivo3.txt 1000
+WRITE archivo3.txt 995 Hola, mundoo
+READ archivo3.txt 995 11
+DELETE archivo3.txt
+LIST

@@ -1,0 +1,2 @@
+CREATE archivo3.txt 1000
+WRITE archivo2.txt 0 Hola, mundoo

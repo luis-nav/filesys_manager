@@ -149,6 +149,12 @@ void create_file(struct Filesystem* filesys, char* filename, int size) {
         printf("Error: File cannot be of length greater than %d. Exiting the app...", MAX_FILE_SIZE);
         exit(1);
     }
+    for (int i=0; i < MAX_FILE_NUMBER; i++) {
+        if (!strcmp(filesys->files[i].name, filename)) {
+            printf("Error: File %s already exists. Exiting the app...", filename);
+            exit(1);
+        }
+    }
 
     // configura el nuevo archivo con el nombre, tamaño y bloques necesarios
     strcpy(filesys->files[filesys->number_of_files].name, filename);
